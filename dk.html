@@ -1,0 +1,142 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+            canvas {
+                border:1px solid #d3d3d3;
+                background-color: #f1f1f1;
+            }
+        </style>
+    </head>
+    <body onload="startGame()">
+        <script>
+            var myGamePiece;
+            var moveright = ["jumpmanstand.png","jumpmanwalk.png","jumpmanwalk2.png","jumpmanjump.png"];
+            var moveleft = ["jumpman1stand.png","jumpman1walk.png","jumpman1walk2.png","jumpman1jump.png"];
+            var i = 0, j = 0;
+            var direction = true;
+
+            function startGame() {
+                myGamePiece = new component(30, 30, moveright[0], 80, 240,"image");
+                myGameArea.start();
+            }
+
+            var myGameArea = {
+                canvas : document.createElement("canvas"),
+                start : function() {
+                    this.canvas.width = 480;
+                    this.canvas.height = 270;
+                    this.context = this.canvas.getContext("2d");
+                    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                    this.interval = setInterval(updateGameArea, 35);
+
+                    window.addEventListener('keydown', function (e) {
+                        myGameArea.keys = (myGameArea.keys || []);
+                        myGameArea.keys[e.keyCode] = (e.type == "keydown");
+                    })
+                    window.addEventListener('keyup', function (e) {
+                        myGameArea.keys[e.keyCode] = (e.type == "keydown");            
+                    })
+                }, 
+                clear : function(){
+                    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+
+            function component(width, height, color, x, y,type) {
+
+                var jump = 0;
+                var jumpanimation = 0;
+
+                this.image = new Image();
+                this.image.src = color;
+
+                this.gamearea = myGameArea;
+                this.width = width;
+                this.height = height;
+                this.speedX = 0;
+                this.speedY = 0;    
+                this.x = x;
+                this.y = y;
+
+                this.gravity = 0.35;
+                this.gravitySpeed = 0;
+                this.bounce = 1;
+
+                this.update = function() {
+                    ctx = myGameArea.context;
+                    ctx.drawImage(this.image, this.x, this.y,this.width, this.height);
+                    /*ctx.fillStyle = color;
+                    ctx.fillRect(this.x, this.y, this.width, this.height);*/
+                }
+
+                this.newPos = function() {
+                    if (this.y + this.speedY < myGameArea.canvas.height-30 && this.y + this.speedY > 0) {
+                        //this.y += this.speedY;
+                        if(direction)  
+                            this.image.src = moveright[3];
+                        else
+                            this.image.src = moveleft[3];
+
+                        jump = 1;
+                        this.gravitySpeed += this.gravity;
+                        this.y += this.speedY + this.gravitySpeed;
+                        this.hitBottom();
+                        /*console.log(this.gravitySpeed);
+                        console.log(this.gravity);
+                        console.log(this.y);
+                        console.log(this.speedY);
+                        console.log('\n');*/   
+                        //console.log(i);   
+                    }
+                    if (this.x + this.speedX < myGameArea.canvas.width-30 && this.x + this.speedX > 0) {
+                        if(jump == 0){
+                            this.x += this.speedX;
+                            jumpanimation = this.speedX;
+                        }
+                        else{
+                            this.x += jumpanimation;
+                        }
+                        
+                    }
+                } 
+
+                this.hitBottom = function() {
+                    var rockbottom = myGameArea.canvas.height - this.height;
+                    if (this.y > rockbottom) {
+                        this.y = rockbottom;
+                        this.gravitySpeed = 0;//-this.gravitySpeed;//-(this.gravitySpeed * this.bounce);
+                        jump = 0;
+
+                        console.log(jump);
+                        if(j != 0)  
+                            this.image.src = moveleft[0];
+                        else
+                            this.image.src = moveright[0];
+                    }
+                }   
+            }
+
+            function updateGameArea() {
+
+                myGameArea.clear();
+                myGamePiece.speedX = 0;
+
+                if (myGamePiece.y == myGameArea.canvas.height-30)
+                    myGamePiece.speedY = 0;
+
+                if(i>2)
+                    i = 0;
+                if(j>2)
+                    j = 0;
+
+                if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -3; myGamePiece.image.src = moveleft[j++]; direction = false;}
+                if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = 3; myGamePiece.image.src = moveright[i++]; direction = true;}
+                if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -5;}
+                //if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = 5;}
+                myGamePiece.newPos();    
+                myGamePiece.update();
+            }
+        </script>
+    </body>
+</html>
