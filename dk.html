@@ -3,55 +3,103 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <style>
             canvas {
-                border:1px solid #d3d3d3;
-                background-color: #f1f1f1;
+                border:1px solid #ffffff;
+                background-color: #000000;
             }
         </style>
     </head>
     <body onload="startGame()">
         <script>
-            var myGamePiece;
-            var moveright = ["jumpmanstand.png","jumpmanwalk.png","jumpmanwalk2.png","jumpmanjump.png"];
-            var moveleft = ["jumpman1stand.png","jumpman1walk.png","jumpman1walk2.png","jumpman1jump.png"];
-            var i = 0, j = 0;
+            var jumpman;
+            var dkScenario;
+            var jumpmanSpriteSheet = "images/sprites/jumpmanSpriteSheet.png"
+            var background = "images/bg/dkBackground.png";
             var direction = true;
+            var colisionMatrix = [];
+            var posY = 0,baseY = 0;
 
-            function startGame() {
-                myGamePiece = new component(30, 30, moveright[0], 80, 240,"image");
-                myGameArea.start();
+            for(var i = 0; i < 6; i++){
+                colisionMatrix[i] = [];
+                for(var j = 0; j < 10; j++)
+                    colisionMatrix[i][j] = {};
             }
 
-            var myGameArea = {
-                canvas : document.createElement("canvas"),
-                start : function() {
-                    this.canvas.width = 480;
-                    this.canvas.height = 270;
+            for(var column = 0; column < 10; column++){
+                if(column > 4){
+                    baseY += 3;
+                }
+
+                if(column < 9){
+                    colisionMatrix[0][column].beam = 161+baseY;
+                    colisionMatrix[2][column].beam = 302+posY;
+                    colisionMatrix[4][column].beam = 451+posY;
+                }
+
+                if(column > 0){
+                    colisionMatrix[1][column].beam = 248-posY;
+                    colisionMatrix[3][column].beam = 398-posY;
+                }
+
+                colisionMatrix[5][column].beam = 541-baseY; 
+                posY += 2;
+            }
+
+            function startGame() {
+                jumpman = new character(37, 40, jumpmanSpriteSheet, 203, 100,"image");
+                dkScenario = new scenario();
+                dkScenario.start();
+            }
+
+            function scenario(){
+                this.canvas = document.createElement("canvas");
+                this.image = new Image();
+                this.image.src = background;
+
+                this.start = function() {
+                    this.canvas.width = 800;
+                    this.canvas.height = 600;
                     this.context = this.canvas.getContext("2d");
                     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-                    this.interval = setInterval(updateGameArea, 35);
+                    this.interval = setInterval(updateGameArea, 1000/30);
 
                     window.addEventListener('keydown', function (e) {
-                        myGameArea.keys = (myGameArea.keys || []);
-                        myGameArea.keys[e.keyCode] = (e.type == "keydown");
+                        dkScenario.keys = (dkScenario.keys || []);
+                        if(e.repeat && e.keyCode == 38){
+                            dkScenario.keys[e.keyCode] = (e.type == null);
+                        }
+                        else{
+                            dkScenario.keys[e.keyCode] = (e.type == "keydown");
+                        }
                     })
                     window.addEventListener('keyup', function (e) {
-                        myGameArea.keys[e.keyCode] = (e.type == "keydown");            
+                        dkScenario.keys[e.keyCode] = (e.type == "keydown");        
                     })
-                }, 
-                clear : function(){
+                }
+
+                this.clear = function(){
                     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                this.updateBackground = function(){
+                    ctx = dkScenario.context;
+                    ctx.drawImage(this.image,0,0,800,600,0,0,800,600)
                 }
             }
 
-            function component(width, height, color, x, y,type) {
+            function character(width, height, color, x, y,type) {
+   
+                var jumpspeed = 0;
 
-                var jump = 0;
-                var jumpanimation = 0;
+                this.i = 0; 
+                this.j = 0; 
+                this.k = 0;
+
+                this.floor = 0;
 
                 this.image = new Image();
                 this.image.src = color;
 
-                this.gamearea = myGameArea;
+                this.gamearea = dkScenario;
                 this.width = width;
                 this.height = height;
                 this.speedX = 0;
@@ -59,83 +107,119 @@
                 this.x = x;
                 this.y = y;
 
+                this.jump = 0;
+
                 this.gravity = 0.35;
                 this.gravitySpeed = 0;
-                this.bounce = 1;
 
                 this.update = function() {
-                    ctx = myGameArea.context;
-                    ctx.drawImage(this.image, this.x, this.y,this.width, this.height);
-                    /*ctx.fillStyle = color;
-                    ctx.fillRect(this.x, this.y, this.width, this.height);*/
+                    ctx = dkScenario.context;
+                    ctx.drawImage(this.image,this.i*256,this.j*256,256,256,this.x,this.y,this.width,this.height);
                 }
 
                 this.newPos = function() {
-                    if (this.y + this.speedY < myGameArea.canvas.height-30 && this.y + this.speedY > 0) {
-                        //this.y += this.speedY;
-                        if(direction)  
-                            this.image.src = moveright[3];
-                        else
-                            this.image.src = moveleft[3];
 
-                        jump = 1;
+                    var posX,posY;
+
+                    posY = this.y+jumpman.height - 110;
+                    posX = this.x - 100 + (this.width/2);
+
+                    line = Math.floor(((posY)/438)*6);
+                    column = Math.floor(((posX)/600)*10);
+
+                    if(column == 0 && (line == 0 || line == 2 || line == 4) && posX < 30){
+                        this.floor = undefined;
+                    }
+                    else if(column == 9 && (line == 1 || line == 3) && posX > 570){
+                        this.floor = undefined;
+                    }
+                    else{
+                        this.floor = colisionMatrix[line][column].beam;
+                    }
+
+                    if ((this.y + this.speedY < this.floor-jumpman.height && this.y + this.speedY > 0) || this.floor == undefined) {
+                  
                         this.gravitySpeed += this.gravity;
                         this.y += this.speedY + this.gravitySpeed;
+                        if(this.jump != 1)
+                            this.jump = 2;
+
+                        updateSprite(2,false);
                         this.hitBottom();
-                        /*console.log(this.gravitySpeed);
-                        console.log(this.gravity);
-                        console.log(this.y);
-                        console.log(this.speedY);
-                        console.log('\n');*/   
-                        //console.log(i);   
                     }
-                    if (this.x + this.speedX < myGameArea.canvas.width-30 && this.x + this.speedX > 0) {
-                        if(jump == 0){
+                    if (this.x + jumpman.width + this.speedX < 700 && this.x + this.speedX > 100) {
+                        if(this.jump == 0){
                             this.x += this.speedX;
-                            jumpanimation = this.speedX;
+                            jumpspeed = this.speedX;
+                            this.hitBottom();
+                        }
+                        else if(this.jump == 1 || this.floor != undefined){
+                            if(this.x + this.width > 700){
+                                jumpspeed = jumpspeed*(-1);
+                                updateSprite(1,true);
+                            }
+                            else if(this.x < 100){
+                                jumpspeed = jumpspeed*(-1);
+                                updateSprite(0,true);
+                            }
+                            this.x += jumpspeed;
                         }
                         else{
-                            this.x += jumpanimation;
+                            jumpspeed = 0;
                         }
-                        
                     }
                 } 
-
+                
                 this.hitBottom = function() {
-                    var rockbottom = myGameArea.canvas.height - this.height;
-                    if (this.y > rockbottom) {
-                        this.y = rockbottom;
-                        this.gravitySpeed = 0;//-this.gravitySpeed;//-(this.gravitySpeed * this.bounce);
-                        jump = 0;
+                    var rockbottom = this.floor - this.height;
 
-                        console.log(jump);
-                        if(j != 0)  
-                            this.image.src = moveleft[0];
-                        else
-                            this.image.src = moveright[0];
+                    if (this.y  > rockbottom) {
+                        this.y = rockbottom;
+                        this.gravitySpeed = 0;
+                        this.jump = 0;
+                        updateSprite(2,false);
                     }
                 }   
             }
 
             function updateGameArea() {
 
-                myGameArea.clear();
-                myGamePiece.speedX = 0;
+                dkScenario.clear();
+                dkScenario.updateBackground();
+                jumpman.speedX = 0;
 
-                if (myGamePiece.y == myGameArea.canvas.height-30)
-                    myGamePiece.speedY = 0;
+                if (jumpman.y == jumpman.floor - jumpman.height)
+                    jumpman.speedY = 0;
 
-                if(i>2)
-                    i = 0;
-                if(j>2)
-                    j = 0;
+                if (dkScenario.keys && dkScenario.keys[37] && !jumpman.jump) {jumpman.speedX = -3; updateSprite(1,true)}
+                if (dkScenario.keys && dkScenario.keys[39] && !jumpman.jump){jumpman.speedX = 3; updateSprite(0,true)}
+                if (dkScenario.keys && dkScenario.keys[38]) {jumpman.speedY = -5; updateSprite(2,false);jumpman.jump = true}
+                jumpman.newPos();    
+                jumpman.update();
+            }
+            
+            function updateSprite(left,turn){    
 
-                if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -3; myGamePiece.image.src = moveleft[j++]; direction = false;}
-                if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = 3; myGamePiece.image.src = moveright[i++]; direction = true;}
-                if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -5;}
-                //if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = 5;}
-                myGamePiece.newPos();    
-                myGamePiece.update();
+                if(turn){
+                    if(left == 0){
+                        jumpman.j = 0;
+                        direction = true;
+                    }
+                    else if(left == 1){
+                        jumpman.j = 1;
+                        direction = false;
+                    }
+                }
+
+                if(!jumpman.jump){
+                    jumpman.i++;
+
+                    if(jumpman.i>2)
+                        jumpman.i = 0;
+                }
+                else{
+                    jumpman.i = 3;
+                }
             }
         </script>
     </body>
