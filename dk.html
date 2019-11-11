@@ -82,7 +82,16 @@
 
                 this.updateBackground = function(){
                     ctx = dkScenario.context;
-                    ctx.drawImage(this.image,0,0,800,600,0,0,800,600)
+                    ctx.drawImage(this.image,0,0,800,600,0,0,800,600);
+                    
+                    /*for(var i = 0; i < 10; i++){
+                        for(var j = 0; j < 6; j++){
+                                ctx.beginPath();
+                                ctx.strokeStyle = "yellow";
+                                ctx.rect(100 + (i*60), 110 + (j*73), 60, 73);
+                                ctx.stroke();
+                        }
+                    }*/
                 }
             }
 
