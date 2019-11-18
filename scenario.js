@@ -1,37 +1,3 @@
-var ladderi = 580;
-var ladderh = 41;
-var ladderw = 38;
-var ladderb = 528;
-var ladder = false;
-var inLadder = false;
-var colisionMatrix = [];
-
-for(var i = 0; i < 6; i++){
-    colisionMatrix[i] = [];
-    for(var j = 0; j < 10; j++)
-        colisionMatrix[i][j] = {};
-}
-
-for(var column = 0; column < 10; column++){
-    if(column > 4){
-        baseY += 3;
-    }
-
-    if(column < 9){
-        colisionMatrix[0][column].beam = 161+baseY;
-        colisionMatrix[2][column].beam = 302+posY;
-        colisionMatrix[4][column].beam = 451+posY;
-    }
-
-    if(column > 0){
-        colisionMatrix[1][column].beam = 248-posY;
-        colisionMatrix[3][column].beam = 398-posY;
-    }
-
-    colisionMatrix[5][column].beam = 541-baseY; 
-    posY += 2;
-}
-
 function scenario(){
     this.canvas = document.createElement("canvas");
     this.image = new Image();
@@ -66,4 +32,73 @@ function scenario(){
         ctx = dkScenario.context;
         ctx.drawImage(this.image,0,0,800,600,0,0,800,600);
     }
+
+    this.stop = function() {
+        clearInterval(this.interval);
+    }
+}
+
+function updateGameArea() {
+
+    dkScenario.clear();
+    dkScenario.updateBackground();
+    jumpman.speedX = 0;
+    jumpman.ladderSpeed = 0;
+
+    if(jumpman.isLadder){
+        jumpman.speedY = 0;
+    }
+
+    if (jumpman.y == jumpman.floor - jumpman.height)
+        jumpman.speedY = 0;
+
+    if (dkScenario.keys && dkScenario.keys[65] && !jumpman.jump && jumpman.inLadder == 0) {jumpman.speedX = -3; updateSprite(1,true,jumpman.speedX);jumpman.isLadder = jumpman.isLadderbelow = false;}
+    if (dkScenario.keys && dkScenario.keys[68] && !jumpman.jump && jumpman.inLadder == 0){jumpman.speedX = 3; updateSprite(0,true,jumpman.speedX);jumpman.isLadder = jumpman.isLadderbelow = false;}
+    if (dkScenario.keys && dkScenario.keys[74] && jumpman.inLadder == 0) {jumpman.speedY = -5; updateSprite(2,false,jumpman.speedX);jumpman.jump = 1;jumpman.isLadder = jumpman.isLadderbelow = false;}
+
+    if (dkScenario.keys && dkScenario.keys[83] && (jumpman.isLadderbelow || jumpman.inLadder != 0)) {jumpman.ladderSpeed = 1;jumpman.inLadder = 1;}
+    if (dkScenario.keys && dkScenario.keys[87] && (jumpman.isLadder || jumpman.inLadder != 0)) {jumpman.ladderSpeed = -1;jumpman.inLadder = 1;};
+
+    for(var i = 0; i < 5; i++){
+        barrel[i].newPos();
+        barrel[i].update();
+    }
+
+    jumpman.newPos();    
+    jumpman.update();
+
+    //boundBox();
+}
+
+
+
+function boundBox(){
+
+    for(var i = 0; i < 10; i++){
+        for(var j = 0; j < 6; j++){
+            ctx.beginPath();
+            ctx.strokeStyle = "yellow";
+            ctx.rect(100 + (i*60), 110 + (j*73), 60, 73);
+            ctx.stroke();
+
+            if(colisionMatrix[j][i].ladder != undefined){
+                ctx.beginPath();
+                ctx.strokeStyle = "red";
+                ctx.rect(colisionMatrix[j][i].ladder.posX, colisionMatrix[j][i].ladder.baseY-colisionMatrix[j][i].ladder.height, colisionMatrix[j][i].ladder.width, colisionMatrix[j][i].ladder.height);
+                ctx.stroke();
+            }
+        }
+    }
+
+    dkScenario.context;
+    ctx.beginPath();
+    ctx.strokeStyle = "yellow";
+    ctx.rect(jumpman.x, jumpman.y, jumpman.width, jumpman.height);
+    ctx.stroke();
+
+    dkScenario.context;
+    ctx.beginPath();
+    ctx.strokeStyle = "yellow";
+    ctx.rect(barrel.x, barrel.y, barrel.width, barrel.height);
+    ctx.stroke();
 }
