@@ -1,20 +1,35 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <style>
+            @font-face {
+            font-family: dkfont;
+            src: url("font/prstart.ttf");
+            }
             canvas {
-                border:1px solid #ffffff;
+                border:1px solid #000000;
                 background-color: #000000;
+
+                padding-left: 0;
+                padding-right: 0;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+                height: 100%;
             }
             body {
                 overflow: hidden;
+                background: #000000;
             }
         </style>
     </head>
-    <body onload="startGame()">
+    <body onload="startMenu()">
         <script src="game.js"></script>
         <script src="scenario.js"></script>
         <script src="player.js"></script>
         <script src="barrel.js"></script>
+        <script src="kong.js"></script>
+        <script src="menus.js"></script>
     </body>
 </html>
