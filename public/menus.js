@@ -111,6 +111,17 @@ function updateMenu(){
 
     if(screen == 0){
 
+        if(window.mobilecheck()){
+            dkScenario.canvas.style.height = 'auto';
+            dkScenario.canvas.style.width = '100%'
+        }
+        else{
+            dkScenario.canvas.style.height = '100%';
+            dkScenario.canvas.style.width = 'auto'
+        }
+
+        $.ajax({url: "/updateStatus", type: "POST", data: {player: nPlayer, status: 0}});
+
         if(dkScenario.keys && dkScenario.keys[87]){option = 1}
         if(dkScenario.keys && dkScenario.keys[83]){option = 2}
         if(dkScenario.keys && dkScenario.keys[32] && option == 1){screen = 1;

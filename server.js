@@ -11,6 +11,7 @@ var player = [];
 var topRanking = [];
 var nConnected = 0;
 var ret = {}
+var playerState = [0,0];
 
 setInterval(testTimeout,500);
 
@@ -94,7 +95,7 @@ app.post('/getN', function (req, res) {
 
     if(player[0] != undefined){
         ret.pontuation1 = player[0].pontuation;
-        ret.life1 = player[0].life;     
+        ret.life1 = player[0].life;
     }
     else{
         ret.pontuation1 = 0;
@@ -113,6 +114,23 @@ app.post('/getN', function (req, res) {
     res.send(ret);
 });
 
+app.post('/updateStatus', function (req, res) {
+
+    playerState[req.body.player] = req.body.status;    
+    res.send();
+});
+
+app.post('/getStatus', function (req, res) {
+    if(req.body.player == 0){
+        ret.status = playerState[1];
+    }
+    else if(req.body.player == 1){
+        ret.status = playerState[0];
+    }
+
+    res.send(ret);
+});
+
 function testTimeout(){
 
     if(player[0] != undefined && player[0].time != undefined && (new Date().getTime()) - player[0].time > 1000){
@@ -120,6 +138,7 @@ function testTimeout(){
         ret.pontuation1 = 0;
         ret.life1 = 3;
         nConnected = nConnected - 1;
+        ret.status1 = 0;
     }
 
     if(player[1] != undefined && player[1].time != undefined && (new Date().getTime()) - player[1].time > 1000){
@@ -127,5 +146,6 @@ function testTimeout(){
         ret.pontuation2 = 0;
         ret.life2 = 3;
         nConnected = nConnected - 1;
+        ret.status2 = 0;
     } 
 }

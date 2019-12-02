@@ -67,13 +67,44 @@ function updatePlayerPosition(){
     }
 }
 
+var myStatus = 0;
+
 function updatePlayers(){
 
-    $.ajax({url: "/getN", type: "POST", data: {player: nPlayer, score: playerPontuation[nPlayer], life: life[nPlayer]}, success: function(result){
+    //$.ajax({url: "/updateStatus", type: "POST", data: {player: nPlayer, status: 3}});
+
+    $.ajax({url: "/getStatus", type: "POST", data: {player: nPlayer}, success: function(result){
+
+        //console.log(result.);
+        console.log(nPlayer+" "+result.status);
+        if(nPlayer == 0 && result.status == 2){
+            confirmLose();
+        }
+        else if(nPlayer == 0 && result.status == 1){
+            confirmVictory();
+        }
+
+        if(nPlayer == 1 && result.status == 2){
+            confirmLose();
+        }
+        else if(nPlayer == 1 && result.status == 1){
+            confirmVictory();
+        }
+
+    }});
+
+    $.ajax({url: "/getN", type: "POST", data: {player: nPlayer, score: playerPontuation[nPlayer], life: life[nPlayer], status: myStatus}, success: function(result){
         
         nPlayers = result.n;
 
         if(nPlayer == 0){
+
+            if(result.status2 == 1){
+                confirmVictory();
+            }
+            else if(result.status2 == 2){
+                confirmLose();
+            }
 
             if(result.pontuation2 == undefined || result.life2 == undefined){
                 playerPontuation[1] = 0;
@@ -82,9 +113,17 @@ function updatePlayers(){
             else{
                 playerPontuation[1] = result.pontuation2;
                 life[1] = result.life2;
-            }             
+            }         
         }
         else if(nPlayer == 1){
+
+            if(result.status1 == 1){
+                confirmVictory();
+            }
+            else if(result.status2 == 2){
+                confirmLose();
+            }
+
             if(result.pontuation1 == undefined || result.life1 == undefined){
                 playerPontuation[0] = 0;
                 life[0] = 3;
@@ -180,7 +219,22 @@ function updateGameArea() {
     jumpman.update();
 
     updatePlayerPosition();
+
+    if(window.mobilecheck()){
+        dkScenario.canvas.style.height = 'auto';
+        dkScenario.canvas.style.width = '100%'
+    }
+    else{
+        dkScenario.canvas.style.height = '100%';
+        dkScenario.canvas.style.width = 'auto'
+    }
 }
+
+window.mobilecheck = function() {
+    var check = false;
+    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+    return check;
+};
 
 function kongUpdate(){
     dk.dropBarrel();
@@ -196,6 +250,10 @@ function jumpmanDeath(player){
 }
 
 function confirmVictory(){
+    myStatus = 2;
+
+    $.ajax({url: "/updateStatus", type: "POST", data: {player:nPlayer, status: 2}});
+
     dkScenario.stop();
     screen = 2;
     menuInterval = setInterval(updateMenu,20);
@@ -203,7 +261,7 @@ function confirmVictory(){
 
 function resetPlayer(){
 
-    if(life[nPlayer] == 0){comfirmLose();}
+    if(life[nPlayer] == 0){confirmLose();}
     
     clearInterval(death);
 
@@ -213,7 +271,11 @@ function resetPlayer(){
     resetPositions();
 }
 
-function comfirmLose(){
+function confirmLose(){
+    myStatus = 1;
+
+    $.ajax({url: "/updateStatus", type: "POST", data: {player:nPlayer, status: 1}});
+
     dkScenario.stop();
     screen = 3;
     menuInterval = setInterval(updateMenu,20);
@@ -226,6 +288,7 @@ function resetPositions(){
     jumpman.i = jumpman.j = 0;
     jumpman.jump = 0;
     jumpman.dead = 0;
+    jumpman.deadSpriteColumn = 0;
     jumpman.inLadder = false;
     jumpman.right = true;
 
